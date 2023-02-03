@@ -1,4 +1,3 @@
-import '../style/global.css'
 
 export function Header(){
    return (
