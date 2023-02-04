@@ -17,4 +17,5 @@ model User {
   name      String
   email     String   @unique
   telefone  String   @unique
+  saldo     Decimal  @default(0)
 }
