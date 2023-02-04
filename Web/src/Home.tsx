@@ -9,7 +9,7 @@ interface HomeProps{
 
 export function Home({ value }:HomeProps) {
   return (
-    <div className="m-0 box-border w-full h-screen flex flex-col items-center justify-between" id='home'>
+    <div className="box-border w-full h-screen flex flex-col items-center justify-between" id='home'>
       <Header/>
       <Main/>
       <Footer/>

@@ -7,7 +7,7 @@ export function Footer(){
       setToday(new Date(timeElapsed).toLocaleDateString())
    },[]);
    return(
-      <footer className="text-center">
+      <footer className="text-center text-2xl">
          <blockquote title="Reserved rights">
             Reserved rights © <br/>
             { today }

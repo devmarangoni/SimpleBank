@@ -1,24 +1,18 @@
-import { Home } from "../../Home";
-import { NewCostumer } from "../Modal/NewCostumer";
-import { Balance } from "../Modal/Balance";
-import { Transfer } from "../Modal/Transfer";
-import { Deposit } from "../Modal/Deposit";
-import { MakePix } from "../Modal/MakePix";
-import { Withdraw } from "../Modal/Withdraw";
+import { Modals } from "../Modal/Modals";
 
 export function Main(){
 
    return (
       <main className="w-full h-full flex flex-row justify-between items-center">
         <section className="w-[46%] h-5/6 flex flex-col justify-evenly">
-          <NewCostumer/>
-          <Transfer/>
-          <Balance/>
+          <Modals textOfButton={"New costumer"} />
+          <Modals textOfButton={"Transfer"}/>
+          <Modals textOfButton={"Balance"}/>
         </section>
         <section className="w-[46%] h-5/6 flex flex-col justify-evenly">
-         <Deposit/>
-         <Withdraw/>
-         <MakePix/>
+          <Modals textOfButton={"Deposit"}/>
+          <Modals textOfButton={"Withdraw"}/>
+          <Modals textOfButton={"Make pix"}/>
         </section>
       </main>
    )
