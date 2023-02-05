@@ -35,7 +35,7 @@ export function Modals({ textOfButton }:ModalsProps){
          >
             <div className="h-full w-full flex flex-wrap items-center justify-center -mx-3">
                <Form typeOfFunction={ textOfButton }/>
-               <button className="w-1/2 h-20 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" onClick={closeModal}>Close</button>
+               <button className="text-3xl w-1/2 h-20 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" onClick={closeModal}>Close</button>
             </div>  
          </Modal>
       </div>

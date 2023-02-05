@@ -61,12 +61,23 @@ export function Form({ typeOfFunction }:FormProps){
       }
    }
 
+   function useState(): [any, any] {
+      throw new Error("Function not implemented.");
+   }
+
    return (
       <div className="h-5/6 w-full flex flex-col items-center justify-center mt-1">
          <h1 className="mt-2 text-center font-bold text-7xl">{ typeOfFunction }</h1>
-         <form action="" className="h-full w-full max-w-lg flex flex-col gap-5 items-center justify-center">
-            {chooseMethod()}
-            <button type="submit" className="w-2/6 h-20 bg-green-500 mb-6 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">finalize</button>
+         <form className="h-full w-full max-w-lg flex flex-col gap-5 items-center justify-center">
+         {chooseMethod()}
+            <button 
+               formMethod="POST"
+               formAction="http://localhost:3333/teste"
+               type="submit" 
+               className="text-3xl w-2/6 h-20 bg-green-500 mb-6 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+            >
+               Finalize
+            </button>
          </form>
       </div>
    )
