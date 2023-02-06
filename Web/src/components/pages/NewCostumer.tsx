@@ -1,6 +1,6 @@
 import { useState } from "react";
  
-export function Teste(){
+export function NewCostumer(){
       const [email, setEmail] = useState<string>();
       const [name, setName] = useState<String>();
       const [phone, setPhone] = useState<String>();
