@@ -9,7 +9,9 @@ import { Balance } from './components/pages/Balance';
 import { Deposit } from './components/pages/Deposit';
 import { MakePix } from './components/pages/MakePix';
 import { Withdraw } from './components/pages/Withdraw';
-import { PageNotFound } from './components/PageNotFound';
+import { PageNotFound } from './utils/PageNotFound';
+import { FailedAction } from './utils/FailedAction';
+import { CompletedAction } from './utils/CompletedAction';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
@@ -22,6 +24,8 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
         <Route path="/deposit" element={<Deposit/>}/>
         <Route path="/withdraw" element={<Withdraw/>}/>
         <Route path="/makepix" element={<MakePix/>}/>
+        <Route path="/completed" element={<CompletedAction/>}/>
+        <Route path="/failed" element={<FailedAction/>}/>
         <Route path="/*" element={<PageNotFound/>}/>
       </Routes>
     </BrowserRouter>
