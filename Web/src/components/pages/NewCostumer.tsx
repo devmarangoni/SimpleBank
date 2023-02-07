@@ -17,7 +17,7 @@ export function NewCostumer(){
             phone: phone
          }
          
-         await fetch('http://localhost:3333/teste',{
+         await fetch('http://localhost:3333/newcostumer',{
             method: "POST",
             body: JSON.stringify(data),
             headers: {
@@ -57,11 +57,3 @@ export function NewCostumer(){
       </div>
    )
 }
-
-function useRef(arg0: number) {
-   throw new Error("Function not implemented.");
-}
-function useEffect(arg0: () => void, arg1: number[]) {
-   throw new Error("Function not implemented.");
-}
-
