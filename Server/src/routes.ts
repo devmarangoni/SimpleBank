@@ -26,7 +26,7 @@ export async function appRoutes(app: FastifyInstance) {
         });
    });
 
-   app.post('/transfer', async (req:any, res:any) => {
+   app.post('/transfer', async (req:any) => {
         const transferEmail = req.body.yourEmail;
         const receivingEmail = req.body.personEmail;
         const amount = new Decimal(+(req.body.amount))
@@ -68,8 +68,20 @@ export async function appRoutes(app: FastifyInstance) {
         });      
    });
 
-   app.get('/balance', async (req: any, res:any) => {
-        
-   }) 
+   app.post('/balance', async (req: any, res:any) => {
+        const userEmail = req.body.email;
+        await prisma.user.findUnique({
+            where: {
+                email: userEmail,
+            }
+        })
+        .then(user => {
+            if(user === null) {
+                console.log("usuario nao existe");
+            } else {
+                console.log(user.saldo);
+            }
+        });
+   });
 }
 
