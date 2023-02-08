@@ -24,9 +24,8 @@ export function Transfer(){
                "Content-Type": "application/json; charset=UTF-8"
             }
          })
-         .then(response => {
-            console.log(response)
-         })
+         .then(response => response.status)
+         .then(status => checkStatus(status))
          .catch(error => console.error(error))
       }
 
