@@ -10,8 +10,8 @@ import { Deposit } from './components/pages/Deposit';
 import { MakePix } from './components/pages/MakePix';
 import { Withdraw } from './components/pages/Withdraw';
 import { PageNotFound } from './utils/PageNotFound';
-import { FailedAction } from './utils/FailedAction';
-import { CompletedAction } from './utils/CompletedAction';
+import { FailedAction } from './utils/Failed';
+import { CompletedAction } from './utils/Completed';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
