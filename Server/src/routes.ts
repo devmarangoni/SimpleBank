@@ -1,9 +1,9 @@
-import { FastifyInstance } from 'fastify';
+import fastify, { FastifyInstance } from 'fastify';
 import { prisma } from './lib/prisma'
 import { Decimal } from '@prisma/client/runtime';
 
 export async function appRoutes(app: FastifyInstance) {
-   app.get('/', async () => {
+   app.get('/', async (req, reply) => {
         const userJoao = await prisma.user.findMany({
             where: {
                 name: {
@@ -11,22 +11,25 @@ export async function appRoutes(app: FastifyInstance) {
                 }
             }
         });
-        return userJoao;
    });
    
-    app.post('/newcostumer', async (req:any) => {
+    app.post('/newcostumer', async (req:any, reply) => {
         const newUserData = req.body;
-        
         await prisma.user.create({
             data: {
                 email: newUserData.email,
                 name: newUserData.name,
                 telefone: newUserData.phone
             }
-        });
+        })
+        .then(async createCostumer => {
+            const newCostumerName:string = createCostumer.name;
+            return reply.send(JSON.stringify({"successMessage":"The new costumer " + newCostumerName + " has been registered"}))
+        })
+        .catch(error => reply.send(JSON.stringify({error})))   
    });
 
-   app.post('/transfer', async (req:any) => {
+   app.post('/transfer', async (req:any, reply) => {
         const transferEmail = req.body.yourEmail;
         const receivingEmail = req.body.personEmail;
         const amount = new Decimal(+(req.body.amount))
@@ -35,7 +38,7 @@ export async function appRoutes(app: FastifyInstance) {
             where: {
                 email: transferEmail
             }
-        }).then(async transferAccount => {
+        }).then(async (transferAccount) => {
             if(transferAccount != null && transferAccount.saldo >= amount){
                 await prisma.user.update({
                     where: {
@@ -61,27 +64,44 @@ export async function appRoutes(app: FastifyInstance) {
                                     saldo: receivignAccount.saldo.add(amount)
                                 }
                             })
+                            .then(async () => {
+                                return reply.send(JSON.stringify({"successMessage":"Your trasfer has been successfully made to the person","warnMessage":"Check your current balance, check your current balance clicking in back button"}))
+                            });
+                        } else {
+                            return reply.send(JSON.stringify({"errorMessage":"The client you tried to transfer does not exist"}));
                         }
                     });
                 });  
-            } 
+            } else {
+                if(transferAccount === null) {
+                    return reply.send(JSON.stringify({"errorMessage":"Costumer not found"}));
+                } else {
+                    const amount:Decimal = transferAccount.saldo;
+                    return reply.send(JSON.stringify({"errorMessage":"You don't have amount for make a transfer", "CurrentAmount":{amount}}))
+                }
+            }
         });      
    });
 
-   app.post('/balance', async (req: any, res:any) => {
+   app.post('/balance', async (req:any, reply) => {
         const userEmail = req.body.email;
-        await prisma.user.findUnique({
-            where: {
-                email: userEmail,
-            }
-        })
-        .then(user => {
-            if(user === null) {
-                console.log("usuario nao existe");
-            } else {
-                console.log(user.saldo);
-            }
-        });
+        if(userEmail != null) {
+            await prisma.user.findUnique({
+                where: {
+                    email: userEmail,
+                }
+            })
+            .then(user => {
+                if(user === null) {
+                    return reply.send(JSON.stringify({ "errorMessage": "costumer not found" }))
+                } else {
+                    const saldo:Decimal = user.saldo;
+                    return reply.send(JSON.stringify({saldo}))
+                }
+            });
+        } else {
+            return reply.send(JSON.stringify({ "errorMessage": "some error not found" }))
+        }
    });
 }
 
