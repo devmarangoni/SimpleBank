@@ -26,7 +26,7 @@ export async function appRoutes(app: FastifyInstance) {
             const newCostumerName:string = createCostumer.name;
             return reply.send(JSON.stringify({"successMessage":"The new costumer " + newCostumerName + " has been registered"}))
         })
-        .catch(error => reply.send(JSON.stringify({error})))   
+        .catch(error => reply.send(JSON.stringify({"errorMessage":error})))   
    });
 
    app.post('/transfer', async (req:any, reply) => {
@@ -98,10 +98,104 @@ export async function appRoutes(app: FastifyInstance) {
                     const saldo:Decimal = user.saldo;
                     return reply.send(JSON.stringify({saldo}))
                 }
-            });
+            })
+            .catch(error => reply.send(JSON.stringify({"errorMessage":error})))
         } else {
             return reply.send(JSON.stringify({ "errorMessage": "some error not found" }))
         }
    });
-}
 
+   app.post('/deposit', async (req:any, reply) => {
+        const accountEmail = req.body.email;
+        const amountOfDeposit = new Decimal(req.body.amount);
+        await prisma.user.findUnique({
+            where: {
+                email: accountEmail
+            }
+        })
+        .then(async userResponse => {
+            if(userResponse != null){
+                const newAmount = new Decimal(userResponse.saldo).add(amountOfDeposit);
+                await prisma.user.update({
+                    where: {
+                        email: userResponse.email
+                    },
+                    data: {
+                        saldo: newAmount
+                    }
+                })
+                .then(async () => {
+                    return reply.send(JSON.stringify({"successMessage": "Your deposit has been made"}))
+                })
+                .catch(error => reply.send(JSON.stringify({"errorMessage":error})));
+            } else {
+                return reply.send(JSON.stringify({"errorMessage": "Costumer not found"}))
+            }
+        })
+        .catch(error => reply.send(JSON.stringify({"errorMessage":error})));
+   });
+
+   app.post('/withdraw', async (req:any, reply) => {
+        const accountEmail = req.body.email;
+        const amount:Decimal = new Decimal(req.body.amount);
+        await prisma.user.findUnique({
+            where: {
+                email: accountEmail
+            }
+        })
+        .then(async userResponse => {
+            if(userResponse != null){
+                const newAmount:Decimal = new Decimal(userResponse.saldo).sub(amount);
+                await prisma.user.update({
+                    where: {
+                        email: userResponse.email
+                    },
+                    data: {
+                        saldo: newAmount
+                    }
+                })
+                .then(async () => {
+                    return reply.send(JSON.stringify({"successMessage": "Your withdrawal has been executed, go to the nearest cashier"}))
+                })
+                .catch(error => reply.send(JSON.stringify({"errorMessage":error})))
+            } else {
+                return reply.send(JSON.stringify({"errorMessage":"Costumer not found"}));
+            }
+        })
+        .catch(error => reply.send(JSON.stringify({"errorMessage": error})))
+   });
+
+   app.post('/makepix', async (req:any, reply) => {
+        const userData = req.body;
+        await prisma.user.findUnique({
+            where: {
+                email: userData.email,
+            }
+        })
+        .then(async userResponse => {
+            if(userResponse != null && userResponse.saldo >= userData.amount) {
+                const transferPixAmount:Decimal = new Decimal(userResponse.saldo).sub(userData.amount);
+                await prisma.user.update({
+                    where: {
+                        email: userResponse.email,
+                    },
+                    data: {
+                        saldo: transferPixAmount,
+                    }
+                })
+                .then(async () => {
+                    return reply.send(JSON.stringify({"successMessage": "Your pix transfer was successful"}))
+                })
+                .catch(error => reply.send(JSON.stringify({"errorMessage":error})));
+            } else {
+                if(userData.email === null) {
+                    return reply.send(JSON.stringify({"errorMessage":"Costumer not found"}));
+                } else {
+                    const amount:Decimal | undefined = userResponse?.saldo;
+                    return reply.send(JSON.stringify({"errorMessage":"You don't have amount for make a transfer", "CurrentAmount":{amount}}))
+                }
+            }
+        })
+        .catch(error => reply.send(JSON.stringify({"errorMessage": error})));
+   });
+}
