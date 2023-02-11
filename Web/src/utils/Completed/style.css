@@ -1,15 +1,9 @@
-body {
-     overflow: hidden;
-}
-
 #body {
    display: flex;
    justify-content: center;
    align-items: center;
 
    height: 100vh;
-
-   transform: scale(2);
 }
 
 #animation {
@@ -18,29 +12,15 @@ body {
    border: 10px solid #e5e5e5;
    border-top-color: #90EE90;
    border-radius: 50%;
+   visibility: hidden;
 
-   animation: completedAnimation 5s;
-   animation-delay: 0.5s;
-   animation-fill-mode: forwards;
+   animation: completedAnimation 10s;
+   animation-delay: 0.2s;
 }
 
 @keyframes completedAnimation {
-   0% {
-        transform: rotate(0turn);
-   }
-   25% {
-    transform: rotate(2turn)
-   }
-
-   50% {
-        transform: rotate(4turn);
-   }
-
-   75% {
-        transform: rotate(6turn);
-   }
-
-   100% {
-        transform: rotate(12turn);
+     to {
+     visibility: visible;
+     transform: rotate(10turn);
    }
 }

@@ -1,9 +1,10 @@
-import './style.css';
+import checkSimbol from '../../assets/checkSimbol.svg';
 
 export function CompletedAction(){
+   //  <div id='checkSimbol'><img src={checkSimbol} alt="check simbol"/></div>
    return (
-      <div id='body'>
-         <div id='animation'></div>
+      <div>
+         <div></div>
       </div>
    )
 }
