@@ -83,26 +83,23 @@ export async function appRoutes(app: FastifyInstance) {
         });      
    });
 
-   app.post('/balance', async (req:any, reply) => {
+   app.post('/balance', async (req: any, reply) => {
         const userEmail = req.body.email;
-        if(userEmail != null) {
-            await prisma.user.findUnique({
+        try {
+            const user = await prisma.user.findUnique({
                 where: {
                     email: userEmail,
                 }
-            })
-            .then(user => {
-                if(user === null) {
-                    return reply.send(JSON.stringify({ "errorMessage": "costumer not found" }))
-                } else {
-                    const saldo:Decimal = user.saldo;
-                    return reply.send(JSON.stringify({saldo}))
-                }
-            })
-            .catch(error => reply.send(JSON.stringify({"errorMessage":error})))
-        } else {
-            return reply.send(JSON.stringify({ "errorMessage": "some error not found" }))
+            });
+            if(user != null) {
+                return reply.send({ saldo: user.saldo });
+            } else {
+                return reply.send({ "errorMessage": "Costumer not found" });
+            }
+        } catch(error) {
+            return reply.send({"errorMessage": error});
         }
+            
    });
 
    app.post('/deposit', async (req:any, reply) => {
