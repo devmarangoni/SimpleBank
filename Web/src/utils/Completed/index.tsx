@@ -4,7 +4,7 @@ export function CompletedAction(){
    //  <div id='checkSimbol'><img src={checkSimbol} alt="check simbol"/></div>
    return (
       <div>
-         <div></div>
+         <div>completed action</div>
       </div>
    )
 }
