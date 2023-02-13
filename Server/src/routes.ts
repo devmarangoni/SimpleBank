@@ -3,84 +3,66 @@ import { prisma } from './lib/prisma'
 import { Decimal } from '@prisma/client/runtime';
 
 export async function appRoutes(app: FastifyInstance) {
-   app.get('/', async (req, reply) => {
-        const userJoao = await prisma.user.findMany({
-            where: {
-                name: {
-                    startsWith: 'João'
-                }
-            }
-        });
-   });
-   
     app.post('/newcostumer', async (req:any, reply) => {
         const newUserData = req.body;
-        await prisma.user.create({
-            data: {
-                email: newUserData.email,
-                name: newUserData.name,
-                telefone: newUserData.phone
-            }
-        })
-        .then(async createCostumer => {
-            const newCostumerName:string = createCostumer.name;
-            return reply.send(JSON.stringify({"successMessage":"The new costumer " + newCostumerName + " has been registered"}))
-        })
-        .catch(error => reply.send(JSON.stringify({"errorMessage":error})))   
+        try {
+            const newCostumer = await prisma.user.create({
+                data: {
+                    email: newUserData.email,
+                    name: newUserData.name,
+                    telefone: newUserData.phone
+                }
+            });
+            const newCostumerName = newCostumer.name;
+            return reply.send({"successMessage":"The new costumer " + newCostumerName + " has been registered"});
+        } catch(error){
+            return reply.send({"errorMessage": error});
+        }
    });
 
    app.post('/transfer', async (req:any, reply) => {
         const transferEmail = req.body.yourEmail;
         const receivingEmail = req.body.personEmail;
         const amount = new Decimal(+(req.body.amount))
-
-        await prisma.user.findUnique({
+        const transferAccount = await prisma.user.findUnique({
             where: {
                 email: transferEmail
             }
-        }).then(async (transferAccount) => {
+        });
+        const receivingAccount = await prisma.user.findUnique({
+            where: {
+                email: receivingEmail
+            }
+        });
+        if(receivingAccount != null && receivingAccount != undefined) {
             if(transferAccount != null && transferAccount.saldo >= amount){
                 await prisma.user.update({
                     where: {
-                        id: transferAccount.id,
+                        id: transferAccount.id
                     },
                     data: {
                         saldo: transferAccount.saldo.sub(amount)
                     }
-                })
-                .then(async () => {
-                    await prisma.user.findUnique({
-                        where: {
-                            email: receivingEmail
-                        }
-                    })
-                    .then(async receivignAccount => {
-                        if(receivignAccount != null && receivignAccount != undefined) {
-                            await prisma.user.update({
-                                where: {
-                                    id: receivignAccount.id
-                                },
-                                data: {
-                                    saldo: receivignAccount.saldo.add(amount)
-                                }
-                            })
-                            .then(async () => {
-                                return reply.send(JSON.stringify({"successMessage":"Your trasfer has been successfully made to the person","warnMessage":"Check your current balance, check your current balance clicking in back button"}))
-                            });
-                        } else {
-                            return reply.send(JSON.stringify({"errorMessage":"The client you tried to transfer does not exist"}));
-                        }
-                    });
-                });  
+                });
+                await prisma.user.update({
+                    where: {
+                        id: receivingAccount.id
+                    }, 
+                    data: {
+                        saldo: receivingAccount.saldo.add(amount)
+                    }
+                });
+                return reply.send({"successMessage": "Your trasfer has been successfully made to the person","currentAmount": transferAccount.saldo})
             } else {
                 if(transferAccount === null) {
-                    return reply.send(JSON.stringify({"errorMessage":"Costumer not found"}));
+                    return reply.send({"errorMessage":"Costumer not found"});
                 } else {
-                    const amount:Decimal = transferAccount.saldo;
-                    return reply.send(JSON.stringify({"errorMessage":"You don't have amount for make a transfer", "CurrentAmount":{amount}}))
+                    return reply.send({"errorMessage":"You don't have amount for make a transfer","currentAmount": transferAccount.saldo})
                 }
             }
-        });      
+        } else {
+            return reply.send({"errorMessage": "The costumer you tried to transfer does not exist"});
+        }      
    });
 
    app.post('/balance', async (req: any, reply) => {
@@ -105,94 +87,88 @@ export async function appRoutes(app: FastifyInstance) {
    app.post('/deposit', async (req:any, reply) => {
         const accountEmail = req.body.email;
         const amountOfDeposit = new Decimal(req.body.amount);
-        await prisma.user.findUnique({
-            where: {
-                email: accountEmail
-            }
-        })
-        .then(async userResponse => {
-            if(userResponse != null){
-                const newAmount = new Decimal(userResponse.saldo).add(amountOfDeposit);
+        try {
+            const depositAccount = await prisma.user.findUnique({
+                where: {
+                    email: accountEmail
+                }
+            })
+            if(depositAccount != null && depositAccount != undefined){
+                const newDepositAccountAmount = new Decimal(depositAccount.saldo).add(amountOfDeposit);
                 await prisma.user.update({
                     where: {
-                        email: userResponse.email
+                        email: depositAccount.email
                     },
                     data: {
-                        saldo: newAmount
+                        saldo: newDepositAccountAmount
                     }
-                })
-                .then(async () => {
+                });
                     return reply.send(JSON.stringify({"successMessage": "Your deposit has been made"}))
-                })
-                .catch(error => reply.send(JSON.stringify({"errorMessage":error})));
             } else {
-                return reply.send(JSON.stringify({"errorMessage": "Costumer not found"}))
+                return reply.send({"errorMessage": "Costumer not found"});
             }
-        })
-        .catch(error => reply.send(JSON.stringify({"errorMessage":error})));
+        }catch(error){
+            return reply.send({"errorMessage": error});
+        }
    });
 
    app.post('/withdraw', async (req:any, reply) => {
-        const accountEmail = req.body.email;
+        const userEmail = req.body.email;
         const amount:Decimal = new Decimal(req.body.amount);
-        await prisma.user.findUnique({
-            where: {
-                email: accountEmail
-            }
-        })
-        .then(async userResponse => {
-            if(userResponse != null){
-                const newAmount:Decimal = new Decimal(userResponse.saldo).sub(amount);
+        try {
+            const userAccount = await prisma.user.findUnique({
+                where: {
+                    email: userEmail
+                }
+            });
+            if(userAccount != null && userAccount != undefined){
+                const newAmount:Decimal = new Decimal(userAccount.saldo).sub(amount);
                 await prisma.user.update({
                     where: {
-                        email: userResponse.email
+                        email: userAccount.email
                     },
                     data: {
                         saldo: newAmount
                     }
-                })
-                .then(async () => {
-                    return reply.send(JSON.stringify({"successMessage": "Your withdrawal has been executed, go to the nearest cashier"}))
-                })
-                .catch(error => reply.send(JSON.stringify({"errorMessage":error})))
+                });
+                    return reply.send({"successMessage": "Your withdrawal has been executed, go to the nearest cashier","currentAmount":userAccount.saldo});
             } else {
                 return reply.send(JSON.stringify({"errorMessage":"Costumer not found"}));
             }
-        })
-        .catch(error => reply.send(JSON.stringify({"errorMessage": error})))
+        }catch(error){
+            return reply.send({"errorMessage": error});
+        }
    });
 
    app.post('/makepix', async (req:any, reply) => {
-        const userData = req.body;
-        await prisma.user.findUnique({
-            where: {
-                email: userData.email,
-            }
-        })
-        .then(async userResponse => {
-            if(userResponse != null && userResponse.saldo >= userData.amount) {
-                const transferPixAmount:Decimal = new Decimal(userResponse.saldo).sub(userData.amount);
+        const userEmail = req.body.email;
+        const pixAmount = req.body.amount;
+        try {
+            const userAccount = await prisma.user.findUnique({
+                where: {
+                    email: userEmail,
+                }
+            });
+            if(userAccount != null && userAccount.saldo >= pixAmount.amount) {
+                const transferPixAmount:Decimal = new Decimal(userAccount.saldo).sub(pixAmount);
                 await prisma.user.update({
                     where: {
-                        email: userResponse.email,
+                        id: userAccount.id,
                     },
                     data: {
                         saldo: transferPixAmount,
                     }
-                })
-                .then(async () => {
-                    return reply.send(JSON.stringify({"successMessage": "Your pix transfer was successful"}))
-                })
-                .catch(error => reply.send(JSON.stringify({"errorMessage":error})));
+                });
+                return reply.send({"successMessage": "Your pix transfer was successful","currentAmount": userAccount.saldo});
             } else {
-                if(userData.email === null) {
-                    return reply.send(JSON.stringify({"errorMessage":"Costumer not found"}));
+                if(userAccount === null) {
+                    return reply.send({"errorMessage":"Costumer not found"});
                 } else {
-                    const amount:Decimal | undefined = userResponse?.saldo;
-                    return reply.send(JSON.stringify({"errorMessage":"You don't have amount for make a transfer", "CurrentAmount":{amount}}))
+                    return reply.send({"errorMessage":"You don't have amount for make a transfer", "CurrentAmount": userAccount.saldo});
                 }
             }
-        })
-        .catch(error => reply.send(JSON.stringify({"errorMessage": error})));
+        }catch(error){
+            return reply.send({"errorMessage":error});
+        }
    });
 }
