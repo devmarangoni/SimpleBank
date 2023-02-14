@@ -6,17 +6,35 @@ export async function appRoutes(app: FastifyInstance) {
     app.post('/newcostumer', async (req:any, reply) => {
         const newUserData = req.body;
         try {
-            const newCostumer = await prisma.user.create({
-                data: {
-                    email: newUserData.email,
-                    name: newUserData.name,
-                    telefone: newUserData.phone
+            const existsEmail = await prisma.user.findUnique({
+                where: {
+                    email: newUserData.email
                 }
             });
-            const newCostumerName = newCostumer.name;
-            return reply.send({"successMessage":"The new costumer " + newCostumerName + " has been registered"});
+            if(existsEmail === null) {
+                const existsPhone = await prisma.user.findUnique({
+                    where: {
+                        telefone: newUserData.phone
+                    }
+                });
+                if(existsPhone === null){
+                    const newCostumer = await prisma.user.create({
+                        data: {
+                            email: newUserData.email,
+                            name: newUserData.name,
+                            telefone: newUserData.phone
+                        }
+                    });
+                    const newCostumerName = newCostumer.name;
+                    return reply.send({"successMessage":"Costumer " + newCostumerName + " has been registered"});
+                } else {
+                    return reply.send({"errorMessage":"Phone is already registered, try other"});
+                }
+            } else {
+                return reply.send({"errorMessage": "Email is already registered, try other"});
+            }
         } catch(error){
-            return reply.send({"errorMessage": error});
+            return reply.send({"errorMessage": ""});
         }
    });
 
@@ -52,12 +70,14 @@ export async function appRoutes(app: FastifyInstance) {
                         saldo: receivingAccount.saldo.add(amount)
                     }
                 });
-                return reply.send({"successMessage": "Your trasfer has been successfully made to the person","currentAmount": transferAccount.saldo})
+                const newBalance = +(transferAccount.saldo.sub(amount));
+                return reply.send({"successMessage": `Transfer done, new balance: ${newBalance.toLocaleString('en', {style: 'currency', currency: 'USD'})}`})
             } else {
                 if(transferAccount === null) {
                     return reply.send({"errorMessage":"Costumer not found"});
                 } else {
-                    return reply.send({"errorMessage":"You don't have amount for make a transfer","currentAmount": transferAccount.saldo})
+                    const newBalance = +(transferAccount.saldo);
+                    return reply.send({"errorMessage":`You don't have amount, balance: ${newBalance.toLocaleString('en', {style: 'currency', currency: 'USD'})}`})
                 }
             }
         } else {
@@ -103,7 +123,8 @@ export async function appRoutes(app: FastifyInstance) {
                         saldo: newDepositAccountAmount
                     }
                 });
-                    return reply.send(JSON.stringify({"successMessage": "Your deposit has been made"}))
+                const newBalance = +(depositAccount.saldo.add(amountOfDeposit));
+                    return reply.send(JSON.stringify({"successMessage": `Your deposit has been made, new balance: ${newBalance.toLocaleString('en', {style: 'currency', currency: 'USD'})}`}))
             } else {
                 return reply.send({"errorMessage": "Costumer not found"});
             }
