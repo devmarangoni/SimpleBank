@@ -1,4 +1,3 @@
-import backgroundImage from '../assets/erro404.jpg';
 import { useNavigate } from 'react-router';
 
 export function PageNotFound(){

@@ -135,26 +135,31 @@ export async function appRoutes(app: FastifyInstance) {
 
    app.post('/withdraw', async (req:any, reply) => {
         const userEmail = req.body.email;
-        const amount:Decimal = new Decimal(req.body.amount);
+        const amount:Decimal = new Decimal(+(req.body.amount));
         try {
             const userAccount = await prisma.user.findUnique({
                 where: {
                     email: userEmail
                 }
             });
-            if(userAccount != null && userAccount != undefined){
-                const newAmount:Decimal = new Decimal(userAccount.saldo).sub(amount);
-                await prisma.user.update({
-                    where: {
-                        email: userAccount.email
-                    },
-                    data: {
-                        saldo: newAmount
-                    }
-                });
-                    return reply.send({"successMessage": "Your withdrawal has been executed, go to the nearest cashier","currentAmount":userAccount.saldo});
+            if(userAccount != null){
+                if(userAccount.saldo >= amount){
+                    await prisma.user.update({
+                        where: {
+                            email: userAccount.email
+                        },
+                        data: {
+                            saldo: userAccount.saldo.sub(amount)
+                        }
+                    });
+                    const newBalance = +(userAccount.saldo.sub(amount));
+                    return reply.send({"successMessage": `Withdraw done!, new balance: ${newBalance.toLocaleString("en", {style: "currency", currency: "USD"})}`});
+                } else {
+                    const yourBalance = +(userAccount.saldo);
+                    return reply.send({"errorMessage": `You don't have amount, your balance: ${yourBalance.toLocaleString('en',{style: "currency", currency: 'USD'})}`});
+                }
             } else {
-                return reply.send(JSON.stringify({"errorMessage":"Costumer not found"}));
+                return reply.send({"errorMessage":"Costumer not found"});
             }
         }catch(error){
             return reply.send({"errorMessage": error});
@@ -163,14 +168,14 @@ export async function appRoutes(app: FastifyInstance) {
 
    app.post('/makepix', async (req:any, reply) => {
         const userEmail = req.body.email;
-        const pixAmount = req.body.amount;
+        const pixAmount = new Decimal(req.body.amount);
         try {
             const userAccount = await prisma.user.findUnique({
                 where: {
                     email: userEmail,
                 }
             });
-            if(userAccount != null && userAccount.saldo >= pixAmount.amount) {
+            if(userAccount != null && userAccount.saldo >= pixAmount) {
                 const transferPixAmount:Decimal = new Decimal(userAccount.saldo).sub(pixAmount);
                 await prisma.user.update({
                     where: {
@@ -180,12 +185,14 @@ export async function appRoutes(app: FastifyInstance) {
                         saldo: transferPixAmount,
                     }
                 });
-                return reply.send({"successMessage": "Your pix transfer was successful","currentAmount": userAccount.saldo});
+                const newBalance = +(userAccount.saldo.sub(pixAmount));
+                return reply.send({"successMessage": `Transfer done! new balance: ${newBalance.toLocaleString('en',{style: "currency", currency: 'USD'})}`});
             } else {
                 if(userAccount === null) {
                     return reply.send({"errorMessage":"Costumer not found"});
                 } else {
-                    return reply.send({"errorMessage":"You don't have amount for make a transfer", "CurrentAmount": userAccount.saldo});
+                    const yourBalance = +(userAccount.saldo);
+                    return reply.send({"errorMessage":`You don't have amount, your balance: ${yourBalance.toLocaleString('en', {style: 'currency', currency: 'USD'})}`});
                 }
             }
         }catch(error){

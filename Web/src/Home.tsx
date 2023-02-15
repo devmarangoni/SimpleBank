@@ -5,7 +5,7 @@ import './style/global.css'
 
 export function Home() {
   return (
-    <div className="box-border w-full h-screen flex flex-col items-center justify-between">
+    <div className="bg-cyan-900 text-white uppercase box-border w-full h-screen flex flex-col items-center justify-between">
       <Header/>
       <Main/>
       <Footer/>
