@@ -1,6 +1,6 @@
 import fastify, { FastifyInstance } from 'fastify';
 import { prisma } from './lib/prisma'
-import { Decimal } from '@prisma/client/runtime';
+import { Decimal } from '@prisma/client/runtime/library';
 
 export async function appRoutes(app: FastifyInstance) {
     app.post('/newcostumer', async (req:any, reply) => {
